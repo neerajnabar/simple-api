@@ -1,7 +1,7 @@
 import json, platform
 from pprint import pprint
 
-def get_sysinfo(data, state):
+def get_sysinfo(state):
     sysinfo = platform.uname()
     return {
         'name': sysinfo.node,
