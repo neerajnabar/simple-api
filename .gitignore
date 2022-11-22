@@ -1,2 +1,4 @@
 .python-version
 problem_statement.txt
+.vscode/
+__pycache__/
