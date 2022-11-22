@@ -1,7 +1,7 @@
 import json, platform
 from pprint import pprint
 
-def get_sysinfo(*args, **kwargs):
+def get_sysinfo(data, state):
     sysinfo = platform.uname()
     return {
         'name': sysinfo.node,
@@ -10,14 +10,13 @@ def get_sysinfo(*args, **kwargs):
         'arch': sysinfo.machine
     }
 
-def post_hello(*args, **kwargs):
-    raw_data = args[0].get("wsgi.input").read().decode()
-    data = json.loads(raw_data)
-    pprint(data)
+def post_hello(data, state):
     return 'Hello, World'
 
-def post_state(*args, **kwargs):
-    raw_data = args[0].get("wsgi.input").read().decode()
-    data = json.loads(raw_data)
-    pprint(data)
-    return ''
+def post_state(data, state):
+    return data, data['state']
+
+def get_state(state):
+    return {
+        'state': state
+    }
