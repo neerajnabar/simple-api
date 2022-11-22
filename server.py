@@ -2,44 +2,49 @@ import socket
 from pprint import pprint
 from io import StringIO
 import sys
-
-from app import App
+import argparse
+from app import app
 
 
 class Server:
+    """Implements a WSGI server"""
     def __init__(self, host='', port=8000, app=None):
         self.host = host
         self.port = port
-        self.application = app
+        self.application = app      # the application associated with the wsgi server
     
     def run(self):
         if self.application is None:
             raise Exception("Application is not set!")
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            """Set up the TCP socket server listening on (host, port)"""
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((self.host, self.port))
             s.listen(1)
 
-            while True:
+            print(f"Listening for requests on port {self.port}")
+            while True:                 
                 conn, addr = s.accept()
                 with conn:
                     req = conn.recv(1024)
                     self.handle_request(req)
 
-                    self.response_body = self.application()(self.environ, self.start_response)
+                    response_body = self.application(self.environ, self.start_response)
 
-                    # print(self.status, self.resp_headers)
-
-                    self.build_response()
+                    self.build_response(response_body)
                     conn.sendall(self.response)
     
-    def build_response(self):
+    def build_response(self, response_body):
+        """
+            Builds the response based on the return from application in the standard HTTP/1.1 format
+        """
         status_line = f'{self.environ.get("SERVER_PROTOCOL")} {self.status}'
         headers = '\r\n'.join([
             f"{_[0]}: {_[1]}" for _ in self.resp_headers
         ])
 
-        response_body_decoded = '\r\n'.join(line.decode() for line in self.response_body)
+        response_body_decoded = '\r\n'.join(line.decode() for line in response_body)
 
         self.response = f'{status_line}\r\n{headers}\r\n\r\n{response_body_decoded}'.encode()
         
@@ -86,5 +91,15 @@ def parse_headers(headers):
     return header_dict
 
 
-wsgi = Server(host='',port=9999, app=App)
-wsgi.run()
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(
+        prog='Server',
+        description='A WSGI server',
+    )
+    parser.add_argument('-p','--port',default=8000)
+
+    args = parser.parse_args()
+    port = int(args.port)
+
+    wsgi_server = Server(host='', port=port, app=app)
+    wsgi_server.run()
