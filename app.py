@@ -2,26 +2,7 @@ import platform
 from pprint import pprint
 import json
 
-def get_sysinfo(*args, **kwargs):
-    sysinfo = platform.uname()
-    return {
-        'name': sysinfo.node,
-        'type': sysinfo.system,
-        'kernel': sysinfo.version,
-        'arch': sysinfo.machine
-    }
-
-def post_hello(*args, **kwargs):
-    raw_data = args[0].get("wsgi.input").read().decode()
-    data = json.loads(raw_data)
-    pprint(data)
-    return 'Hello, World'
-
-def post_state(*args, **kwargs):
-    raw_data = args[0].get("wsgi.input").read().decode()
-    data = json.loads(raw_data)
-    pprint(data)
-    return ''
+import views 
 
 class App:
     def __init__(self):
@@ -43,6 +24,7 @@ class App:
             return [response_body]
 
     def add_url_rule(self, method, url_path, fn, *args, **kwargs):
+        """Build a URL-view function map"""
         self.routes[(method, url_path)] = fn
 
     def handle_request(self):
@@ -60,7 +42,7 @@ class App:
 
 
 app = App()
-app.add_url_rule('POST','/hello', post_hello)
-app.add_url_rule('POST','/setstate', post_state)
-app.add_url_rule('GET', '/sysinfo', get_sysinfo)
+app.add_url_rule('POST','/api/hello', views.post_hello)
+app.add_url_rule('POST','/api/setstate', views.post_state)
+app.add_url_rule('GET', '/api/sysinfo', views.get_sysinfo)
 
